@@ -90,13 +90,16 @@ class Comment(models.Model):
 class Disease(models.Model):
     disease_number = models.AutoField(primary_key=True)
     disease_name = models.CharField(unique=True, max_length=45)
-    disease_imfomation_path = models.CharField(max_length=45)
+    disease_imfomation_path = models.TextField()
 
     class Meta:
         managed = False
         db_table = 'disease'
         app_label = 'board'
         app_label = 'board'
+
+    def __str__(self):
+        return str(self.disease_number)
 
 class DjangoAdminLog(models.Model):
     action_time = models.DateTimeField()
@@ -148,7 +151,7 @@ class Post(models.Model):
     user_number = models.ForeignKey('User', models.DO_NOTHING, db_column='user_number')
     post_body_path = models.TextField()
     image_path = models.TextField()
-    disease_number = models.ForeignKey(Disease, models.DO_NOTHING, db_column='disease_number')
+    disease_number = models.ForeignKey('Disease', models.DO_NOTHING, db_column='disease_number')
     comment_count = models.IntegerField()
     title = models.CharField(max_length=45)
     created_at = models.DateTimeField()
@@ -175,7 +178,7 @@ class TestTable(models.Model):
 class User(models.Model):
     user_number = models.AutoField(primary_key=True)
     id = models.CharField(max_length=45)
-    passwerod = models.CharField(max_length=45)
+    password = models.CharField(max_length=45)
     name = models.CharField(max_length=45)
     age = models.IntegerField()
     dog_name = models.CharField(max_length=45)
@@ -185,3 +188,14 @@ class User(models.Model):
         db_table = 'user'
         app_label = 'board'
 
+    def __str__(self):
+        return str(self.user_number)
+
+
+#Django REST Framework ( DRF ) 와 안드로이드 연동하기
+class Version(models.Model):
+    version = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.version
+#serializers.py 부분까지
