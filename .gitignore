@@ -176,3 +176,7 @@ cython_debug/
 #venv
 serverenv
 owc
+
+#models
+class_model
+test_img
