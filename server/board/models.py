@@ -178,7 +178,7 @@ class TestTable(models.Model):
 class User(models.Model):
     user_number = models.AutoField(primary_key=True)
     id = models.CharField(max_length=45)
-    password = models.CharField(max_length=45)
+    password = models.CharField(max_length=450)
     name = models.CharField(max_length=45)
     age = models.IntegerField()
     dog_name = models.CharField(max_length=45)
