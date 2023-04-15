@@ -39,6 +39,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('posts/test', views.test, name='test'),
     path('post/', post_list, name='post-list'),
+    path('login/', views.login, name='login'),#로그인 view로 이어지는 url입니다.
+    path('sign_up/', views.sign_up, name='sign_up'),
     # path('api/posts/<str:post_body_path>/content', views.get_post_content, name='get_post_content'),
     #위는 기존의 텍스트만 불러오는 url, 아래쪽은 이미지와 같이 불러오는 url
     path('api/posts/<str:post_body_path>/content_and_image', views.get_post_and_image_content, name='get_post_and_image_content'),
