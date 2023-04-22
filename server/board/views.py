@@ -74,7 +74,8 @@ if not os.path.exists(f'{ROOT_PATH}/{DATA_PATH}/txtfile'):
 
 @api_view(['GET'])
 def post_list(request):
-    posts = Post.objects.all()
+    #posts = Post.objects.all()
+    posts=Post.objects.all().order_by('-post_number')
     serializer = PostSerializer(posts, many=True)
    # print(serializer.data)
     return Response(serializer.data)
