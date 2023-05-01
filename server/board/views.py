@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views import View
 from rest_framework.response import Response
 
 from .forms import PostForm #forms.py는 작성한 부분.
@@ -17,7 +18,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework import status
-from .models import Post, User, Disease
+from .models import Post, User, Disease, Comment
 from .serializers import UserSerializer, PostSerializer
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
@@ -32,6 +33,7 @@ logger = logging.getLogger(__name__)
 ROOT_PATH = './board'
 #데이터 저장할 폴더
 DATA_PATH = 'PostData'
+COMMENT_PATH='CommentData'
 
 if not os.path.exists(f'{ROOT_PATH}/{DATA_PATH}'):
     os.makedirs(f'{ROOT_PATH}/{DATA_PATH}')
@@ -221,35 +223,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 
-#텍스트 파일의 내용을 읽는 view입니다.  프론트 다 개발 후 해당 기능 완전히 개발하면 삭제 예정.
-# def get_post_content(request, post_body_path):
-#     logger.info("get_post_content 실행 확인")
-#     logger.info(f"post_body_path: {post_body_path}")
-#     try:
-#         # 파일의 이름만 받았다고 가정하고, 실제 파일이 있는 경로를 지정합니다.
-#
-#         #수정 필요
-#         file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{post_body_path}.txt'
-#         logger.info(file_path)
-#         # 파일을 열고 내용을 읽습니다.
-#         with open(file_path, 'r', encoding='utf-8') as f:
-#             content = f.read()
-#             logger.info(content)
-#
-#
-#         # 파일의 내용을 JSON 형식으로 반환합니다.
-#         return JsonResponse({'content': content})
-#
-#
-#
-#     except Exception as e:
-#
-#         logger.error(f"Error: {str(e)}")
-#
-#         return JsonResponse({'error': str(e)}, status=500)
 
-
-#이미지와 텍스트 파일을 동시에 불러오는 view인데 이미지 파일이 없어도 되는 view
+#이미지와 텍스트 파일을 동시에 불러오는 view인데 이미지 파일이 없어도 되는 view. 이 코드가 게시글 불러오기에 성공한 가장 최신 버전
 def get_post_and_image_content(request, post_body_path):
     try:
         # 텍스트 파일 내용을 불러옵니다.
@@ -273,6 +248,108 @@ def get_post_and_image_content(request, post_body_path):
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
+#위에 까지가 잘 작동하던 게시글 불러오기 view. 이하  view는 댓글도 같이 불러오는 기능을 추가하고 있음
+
+class GetPostDataWithCommentsView(View):
+    def get(self, request, post_body_path, post_number):
+        logger.info(f"위치 확인: post_number 값 - {post_number}")
+
+        try:
+
+            logger.info("위치 확인: get 메서드 시작")
+            # 텍스트 파일 내용을 불러옵니다.
+            text_file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{post_body_path}.txt'
+            with open(text_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # 이미지 파일이 있는지 확인합니다.
+            image_file_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{post_body_path}.jpg'
+
+            if os.path.exists(image_file_path):
+                # 이미지 파일이 있는 경우 base64로 인코딩합니다.
+                with open(image_file_path, 'rb') as f:
+                    image_base64 = base64.b64encode(f.read()).decode('utf-8')
+                   # logger.info(f"Image data: {image_base64}")  # 이미지 데이터 로그 출력
+            else:
+                # 이미지 파일이 없는 경우 빈 문자열 반환
+                image_base64 = ""
+
+            post_data = {
+                'content': content,
+                'image_base64': image_base64
+            }
+
+            logger.info("위치 확인: 게시글 데이터 처리 완료")
+            # 게시글에 해당하는 댓글과 대댓글을 불러옵니다.
+            all_comments = Comment.objects.filter(post_number=post_number).order_by('comment_number')
+
+            logger.info("위치 확인: 쿼리셋 로그 시작")
+            # all_comments 쿼리셋이 비어 있는지 확인하는 로그 추가
+            if not all_comments.exists():
+                logger.info("all_comments 쿼리셋이 비어 있습니다.")
+            else:
+                logger.info(f"all_comments 쿼리셋에 {all_comments.count()}개의 댓글이 있습니다.")
+            logger.info("위치 확인: 쿼리셋 로그 완료")
+
+            comments_data = self.build_comment_tree(all_comments)
+
+            logger.info("위치 확인: 댓글 트리 생성 완료")
+
+            response_data = {
+                'post': post_data,
+                'comments': comments_data
+            }
+
+            return JsonResponse(response_data)
+
+        except Exception as e:
+            logger.error(f"Error: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    def build_comment_tree(self, all_comments):
+        comments_data = []
+
+        logger.info("위치 확인: build_comment_tree 메서드 시작")
+
+        def find_parent_comment(comments, before_comment):
+            for comment in comments:
+                if comment['comment_id'] == before_comment:
+                    return comment
+                if comment['replies']:
+                    found = find_parent_comment(comment['replies'], before_comment)
+                    if found:
+                        return found
+            return None
+
+        # 댓글과 대댓글을 각각 처리합니다.
+        for comment in all_comments:
+            comment_author = comment.user  # 작성자 객체를 가져옵니다.
+            comment_data = {
+                'comment_id': comment.comment_number,
+                'content': self.get_comment_content(comment),
+                'replies': [],
+                'author_name': comment_author.name,  # 작성자 이름을 가져옵니다.
+                'before_comment':comment.before_comment,
+            }
+
+            if comment.before_comment == 0:
+                comments_data.append(comment_data)
+                logger.info(f"위치 확인: 댓글 처리 - {comment_data['content']}")
+            else:
+                parent_comment = find_parent_comment(comments_data, comment.before_comment)
+                if parent_comment:
+                    parent_comment['replies'].append(comment_data)
+                    logger.info(f"위치 확인: 대댓글 처리 - {comment_data['content']}")
+
+        return comments_data
+
+    def get_comment_content(self, comment):
+        text_file_path = f'{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt'
+        logger.info(f"댓글 경로 확인: {text_file_path}")
+        with open(text_file_path, 'r', encoding='utf-8') as f:
+            comment_content = f.read()
+        return comment_content
+
 
 #로그인 기능을 담당하는 view 입니다.
 @api_view(['POST'])
