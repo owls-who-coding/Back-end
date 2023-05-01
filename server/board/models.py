@@ -76,15 +76,14 @@ class AuthUserUserPermissions(models.Model):
 
 class Comment(models.Model):
     comment_number = models.AutoField(primary_key=True)
-    post_number = models.ForeignKey('Post', models.DO_NOTHING, db_column='post_number')
+    post_number = models.ForeignKey('Post', models.DO_NOTHING, db_column='post_number', blank=True, null=True)
     before_comment = models.IntegerField(blank=True, null=True)
-    user_number = models.ForeignKey('User', models.DO_NOTHING, db_column='user_number')
-    comment_body_path = models.TextField()
+    user = models.ForeignKey('User', models.DO_NOTHING, db_column='user_number')  # 변경된 부분입니다.
+    comment_body_path = models.CharField(max_length=100)
 
     class Meta:
         managed = False
         db_table = 'comment'
-        app_label = 'board'
         app_label = 'board'
 
 class Disease(models.Model):
