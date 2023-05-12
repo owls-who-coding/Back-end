@@ -47,31 +47,6 @@ if not os.path.exists(f'{ROOT_PATH}/{DATA_PATH}/imagefile'):
 if not os.path.exists(f'{ROOT_PATH}/{DATA_PATH}/txtfile'):
     os.makedirs(f'{ROOT_PATH}/{DATA_PATH}/txtfile')
 
-#html 사용할 때 사용하던 코드로 추정. 기능 개발 하다가 문제 없으면 그대로 삭제.
-# @login_required
-# # views.py
-# def post_create(request):
-#     print("Post_create")
-#     if request.method == 'POST':
-#         form = PostForm(request.POST)
-#         if form.is_valid():
-#             # 파일 저장
-#             post_body_path = f'media/{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt'
-#             with open(post_body_path, 'w') as f:
-#                 f.write(form.cleaned_data['body_text'])
-#             # 게시글 생성
-#             post = form.save(commit=False)
-#             post.author = request.user
-#             post.post_body_path = post_body_path
-#             post.save()
-#             return redirect('post_detail', pk=post.pk)
-#     else:
-#         form = PostForm()
-#     return render(request, 'post_form.html', {'form': form})
-#
-# def post_detail(request, pk):
-#     post = get_object_or_404(Post, pk=pk)
-#     return render(request, 'post_detail.html', {'post': post})
 
 
 @api_view(['GET'])
@@ -82,56 +57,6 @@ def post_list(request):
    # print(serializer.data)
     return Response(serializer.data)
 
-# #게시글을 파일로 변환하여 보관하는 view입니다.
-# @csrf_exempt
-# def create_post(request):
-#     if request.method == 'POST':
-#
-#         logger.info("create_post 실행확인")
-#         # 데이터를 받아옵니다.
-#         text = request.POST.get('text', '')
-#         title = request.POST.get('title', '')
-#         user_number = int(request.POST.get('user_number', ''))
-#         disease_number = int(request.POST.get('disease_number', ''))
-#         # 로그를 출력합니다.
-#         logger.info(f"text: {text}")
-#         logger.info(f"user_number: {user_number}")
-#         logger.info(f"disease_number: {disease_number}")
-#         logger.info(f"title: {title}")
-#         logger.info("실행확인")
-#         user = User.objects.get(pk=user_number)
-#         disease = Disease.objects.get(pk=disease_number)
-#
-#
-#
-#         # txt 파일로 변환하여 저장
-#         #save_path = './testfile/txtfile'
-#
-#         # file_name = 'testing888888' #수정 필요
-#         created_at = datetime.now()
-#         formatted_time = created_at.strftime('%y%m%d%H%M%S')
-#         file_name = f"{user_number} {formatted_time}"
-#
-#         #file_path = os.path.join(save_path, file_name)
-#         file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{file_name}.txt'
-#
-#         with open(file_path, 'w', encoding='utf-8') as f:
-#             f.write(text)
-#
-#         # Post 객체를 생성하고 데이터베이스에 저장합니다.
-#         post = Post(user_number=user,
-#                     disease_number=disease,
-#                     post_body_path=file_name,
-#                     image_path='',
-#                     comment_count=0,
-#                     title=title,
-#                     created_at=created_at,
-#                     updated_at=datetime.now())
-#         post.save()
-#
-#         return JsonResponse({'message': 'Post created successfully'})
-#     else:
-#         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 # 이미지 파일 넣었던 코드
 @csrf_exempt
@@ -146,18 +71,12 @@ def create_post(request):
         disease_number = int(request.POST.get('disease_number', ''))
 
         # # 로그를 출력합니다.
-        # logger.info(f"text: {text}")
-        # logger.info(f"user_number: {user_number}")
-        # logger.info(f"disease_number: {disease_number}")
-        # logger.info(f"title: {title}")
-        # logger.info("실행확인")
         user = User.objects.get(pk=user_number)
         disease = Disease.objects.get(pk=disease_number)
 
 
-        # file_name = 'testing888888' #수정 필요
+
         created_at = timezone.now()
-        #logger.info(created_at)#여기까지 진행
 
         formatted_time = created_at.strftime('%y%m%d%H%M%S')
 
@@ -204,7 +123,7 @@ def create_post(request):
                     comment_count=0,
                     title=title,
                     created_at=created_at,
-                    updated_at=timezone.now())#여기 문제가 아니라는건 알았음
+                    updated_at=timezone.now())
         post.save()
 
         return JsonResponse({'message': 'Post created successfully'})
@@ -250,96 +169,45 @@ def get_post_and_image_content(request, post_body_path):
         return JsonResponse({'error': str(e)}, status=500)
 #위에 까지가 잘 작동하던 게시글 불러오기 view. 이하  view는 댓글도 같이 불러오는 기능을 추가하고 있음
 
-class GetPostDataWithCommentsView(View):
-    def get(self, request, post_body_path, post_number):
-        logger.info(f"위치 확인: post_number 값 - {post_number}")
+# 최종 적으로 게시글과 댓글을 분리. 이하가 댓글을 불러오는 코드
 
-        try:
+class GetCommentsView(View):
+    def get(self, request, post_number):
 
-            logger.info("위치 확인: get 메서드 시작")
-            # 텍스트 파일 내용을 불러옵니다.
-            text_file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{post_body_path}.txt'
-            with open(text_file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+        all_comments = Comment.objects.filter(post_number=post_number).order_by('comment_number')
 
-            # 이미지 파일이 있는지 확인합니다.
-            image_file_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{post_body_path}.jpg'
+        logger.info("위치 확인: 쿼리셋 로그 시작")
+        # all_comments 쿼리셋이 비어 있는지 확인하는 로그 추가
+        if not all_comments.exists():
+            logger.info("all_comments 쿼리셋이 비어 있습니다.")
+        else:
+            logger.info(f"all_comments 쿼리셋에 {all_comments.count()}개의 댓글이 있습니다.")
+        logger.info("위치 확인: 쿼리셋 로그 완료")
 
-            if os.path.exists(image_file_path):
-                # 이미지 파일이 있는 경우 base64로 인코딩합니다.
-                with open(image_file_path, 'rb') as f:
-                    image_base64 = base64.b64encode(f.read()).decode('utf-8')
-                   # logger.info(f"Image data: {image_base64}")  # 이미지 데이터 로그 출력
-            else:
-                # 이미지 파일이 없는 경우 빈 문자열 반환
-                image_base64 = ""
+        comments_data = self.build_comment_tree(all_comments)
 
-            post_data = {
-                'content': content,
-                'image_base64': image_base64
-            }
+        # 정렬: 먼저 before_comment 값으로 정렬하고, 그 다음 comment_id 값으로 정렬
+        comments_data = sorted(comments_data, key=lambda x: (x['before_comment'], x['comment_id']))
 
-            logger.info("위치 확인: 게시글 데이터 처리 완료")
-            # 게시글에 해당하는 댓글과 대댓글을 불러옵니다.
-            all_comments = Comment.objects.filter(post_number=post_number).order_by('comment_number')
 
-            logger.info("위치 확인: 쿼리셋 로그 시작")
-            # all_comments 쿼리셋이 비어 있는지 확인하는 로그 추가
-            if not all_comments.exists():
-                logger.info("all_comments 쿼리셋이 비어 있습니다.")
-            else:
-                logger.info(f"all_comments 쿼리셋에 {all_comments.count()}개의 댓글이 있습니다.")
-            logger.info("위치 확인: 쿼리셋 로그 완료")
-
-            comments_data = self.build_comment_tree(all_comments)
-
-            logger.info("위치 확인: 댓글 트리 생성 완료")
-
-            response_data = {
-                'post': post_data,
-                'comments': comments_data
-            }
-
-            return JsonResponse(response_data)
-
-        except Exception as e:
-            logger.error(f"Error: {str(e)}")
-            return JsonResponse({'error': str(e)}, status=500)
+        logger.info("위치 확인: 댓글 트리 생성 완료")
+        response_data = {
+            'comments': comments_data
+        }
+        return JsonResponse(response_data)
 
     def build_comment_tree(self, all_comments):
         comments_data = []
 
-        logger.info("위치 확인: build_comment_tree 메서드 시작")
-
-        def find_parent_comment(comments, before_comment):
-            for comment in comments:
-                if comment['comment_id'] == before_comment:
-                    return comment
-                if comment['replies']:
-                    found = find_parent_comment(comment['replies'], before_comment)
-                    if found:
-                        return found
-            return None
-
-        # 댓글과 대댓글을 각각 처리합니다.
         for comment in all_comments:
-            comment_author = comment.user  # 작성자 객체를 가져옵니다.
+            comment_author = comment.user
             comment_data = {
                 'comment_id': comment.comment_number,
                 'content': self.get_comment_content(comment),
-                'replies': [],
-                'author_name': comment_author.name,  # 작성자 이름을 가져옵니다.
-                'before_comment':comment.before_comment,
+                'author_name': comment_author.name,
+                'before_comment': comment.before_comment,
             }
-
-            if comment.before_comment == 0:
-                comments_data.append(comment_data)
-                logger.info(f"위치 확인: 댓글 처리 - {comment_data['content']}")
-            else:
-                parent_comment = find_parent_comment(comments_data, comment.before_comment)
-                if parent_comment:
-                    parent_comment['replies'].append(comment_data)
-                    logger.info(f"위치 확인: 대댓글 처리 - {comment_data['content']}")
+            comments_data.append(comment_data)
 
         return comments_data
 
