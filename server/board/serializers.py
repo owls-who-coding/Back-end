@@ -28,13 +28,40 @@ class UserSerializer(serializers.ModelSerializer):
 #
 # from rest_framework import serializers
 # 위에가 기존
+# class PostSerializer(serializers.ModelSerializer):
+#     user_number = serializers.StringRelatedField()
+#     disease_number = serializers.StringRelatedField()
+#
+#     class Meta:
+#         model = Post
+#         fields = '__all__'
+# 위에가 되던거 최신 버전
+#
 class PostSerializer(serializers.ModelSerializer):
-    user_number = serializers.StringRelatedField()
+    name = serializers.StringRelatedField(source='user_number.name')
     disease_number = serializers.StringRelatedField()
 
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = [
+            'post_number',
+            'user_number',
+            'name',  # user_name 필드를 추가합니다.
+            'disease_number',
+            'post_body_path',
+            'image_path',
+            'disease_number' ,
+            'comment_count',
+            'title',
+            'created_at',
+            'updated_at',
+        ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        print(f"User Name: {representation['name']}")  # user_name 필드를 출력합니다.
+        return representation
+
 
 # CommentSerializer를 추가. 아직 시험중
 class CommentSerializer(serializers.ModelSerializer):
