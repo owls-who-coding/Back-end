@@ -55,10 +55,12 @@ def post_list(request):
     posts=Post.objects.all().order_by('-post_number')
     serializer = PostSerializer(posts, many=True)
    # print(serializer.data)
+    logger.info(f"데이터 전송 확인: {serializer.data}")
     return Response(serializer.data)
 
 
-# 이미지 파일 넣었던 코드
+
+# 게시글 생성 코드
 @csrf_exempt
 def create_post(request):
     if request.method == 'POST':
@@ -83,15 +85,8 @@ def create_post(request):
         file_name = f"{user_number} {formatted_time}"
 
 
-        #jpg 파일로 저장.
+        #받아온 이미지의 확장자에 상관없이 이미지 처리
         image = request.FILES.get('image', None)
-        #logger.info("위치확인5")#여기까지 진행
-
-
-        # txt 파일로 변환하여 저장
-        #save_path = './testfile/txtfile'
-
-        #file_name = 'testing888888' #수정 필요   부터 3줄의 원래 위치.
 
         #file_path = os.path.join(save_path, file_name)
         file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{file_name}.txt'
@@ -130,6 +125,67 @@ def create_post(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+#게시글 수정 코드
+@csrf_exempt
+def update_post(request):
+    if request.method == 'POST':
+        logger.info("update_post 실행확인")
+
+        # 데이터를 받아옵니다.
+        post_number = int(request.POST.get('post_number', ''))
+        text = request.POST.get('text', '')
+        title = request.POST.get('title', '')
+
+
+        post = Post.objects.get(pk=post_number)
+        user = post.user_number
+
+        created_at = post.created_at
+        formatted_time = created_at.strftime('%y%m%d%H%M%S')
+        file_name = f"{user} {formatted_time}"
+
+        image = request.FILES.get('image', None)
+
+
+        file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{file_name}.txt'
+        image_file_name = f'{file_name}.jpg'  # 이미지 확장자에 따라 변경해야 할 수 있습니다.
+        image_file_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{image_file_name}'
+
+        if image:
+            fs = FileSystemStorage(location=f'{ROOT_PATH}/{DATA_PATH}/imagefile/')
+            # image_file_name = f'{file_name}.jpg'  # 이미지 확장자에 따라 변경해야 할 수 있습니다.
+            # filename = fs.save(image_file_name, image)
+            # image_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{filename}'
+
+            # 기존의 이미지 파일이 있는 경우 삭제합니다.
+            if os.path.isfile(image_file_path): # 이 명령어가 통하지 않는 듯 하다.
+                os.remove(image_file_path)
+                logger.info(f"Removed existing image file: {image_file_path}")
+
+            # 새로운 이미지 파일을 저장합니다.
+            filename = fs.save(image_file_name, image)
+            image_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{filename}'
+
+
+            # 이미지 처리 상태 로그 추가
+            logger.info(f"Image received: {image}")
+            logger.info(f"Image saved as: {filename}")
+            logger.info(f"Image path: {image_path}")
+        else:
+            image_path = post.image_path
+            logger.info("No image received")
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+
+        # Post 객체를 업데이트하고 데이터베이스에 저장합니다.
+        post.title = title
+        post.updated_at = timezone.now()
+        post.save()
+
+        return JsonResponse({'message': 'Post updated successfully'})
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -140,6 +196,42 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.select_related('user_number', 'disease_number')
     serializer_class = PostSerializer
 
+#게시글 삭제 view 작성
+@csrf_exempt
+def delete_post(request):
+    if request.method == 'POST':
+        # 데이터를 받아옵니다.
+        post_number = int(request.POST.get('post_number', ''))
+
+        # Post 객체를 찾습니다.
+        try:
+            post = Post.objects.get(pk=post_number)
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post does not exist'}, status=400)
+
+        # 파일 경로를 생성합니다.
+        user = post.user_number
+        created_at = post.created_at
+        formatted_time = created_at.strftime('%y%m%d%H%M%S')
+        file_name = f"{user} {formatted_time}"
+        text_file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{file_name}.txt'
+        image_file_name = f'{file_name}.jpg'
+        image_file_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{image_file_name}'
+
+        # 파일 시스템에서 게시글 파일을 삭제합니다.
+        if os.path.isfile(text_file_path):
+            os.remove(text_file_path)
+
+        # 파일 시스템에서 이미지 파일을 삭제합니다.
+        if os.path.isfile(image_file_path):
+            os.remove(image_file_path)
+
+        # 데이터베이스에서 Post 객체를 삭제합니다.
+        post.delete()
+
+        return JsonResponse({'message': 'Post deleted successfully'})
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 
@@ -186,15 +278,15 @@ class GetCommentsView(View):
 
         comments_data = self.build_comment_tree(all_comments)
 
+
         # 정렬: 먼저 before_comment 값으로 정렬하고, 그 다음 comment_id 값으로 정렬
         comments_data = sorted(comments_data, key=lambda x: (x['before_comment'], x['comment_id']))
 
 
         logger.info("위치 확인: 댓글 트리 생성 완료")
-        response_data = {
-            'comments': comments_data
-        }
-        return JsonResponse(response_data)
+
+        return JsonResponse({'comments': comments_data})
+
 
     def build_comment_tree(self, all_comments):
         comments_data = []
