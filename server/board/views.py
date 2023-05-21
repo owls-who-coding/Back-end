@@ -296,7 +296,7 @@ class GetCommentsView(View):
         comments_data = []
 
         for comment in all_comments:
-            comment_author = comment.user
+            comment_author = comment.user_number
             comment_data = {
                 'comment_id': comment.comment_number,
                 'content': self.get_comment_content(comment),
@@ -399,7 +399,7 @@ def create_comment(request):
     comment = Comment.objects.create(
         post_number=post,
         before_comment=before_comment,
-        user=user,
+        user_number=user,
         comment_body_path=filename
     )
 
@@ -414,7 +414,7 @@ def delete_comment(request, comment_number):
     # 주어진 comment_number에 해당하는 댓글을 가져옴
     comment = get_object_or_404(Comment, comment_number=comment_number)
 
-    if request.user == comment.user:
+    if request.user == comment.user_number:
         # 해당 댓글의 대댓글들을 찾음
         replies = Comment.objects.filter(before_comment=comment_number)
 
