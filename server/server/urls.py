@@ -21,8 +21,7 @@ from django.urls import path, include, re_path
 from rest_framework import routers
 
 from board import views
-from board.views import post_list
-
+from board.views import post_list, create_comment, delete_comment
 
 router = routers.DefaultRouter()
 router.register(r'posts', views.PostViewSet)
@@ -48,6 +47,11 @@ urlpatterns = [
     path('api/posts/<int:post_number>/comments', views.GetCommentsView.as_view(), name='GetCommentsView'),
     #이하 코드는 게시글 삭제 url
     path('delete-post/', views.delete_post, name='delete_post'),  # 게시글 삭제 url
+    #다음 코드는 댓글 생성
+    path('api/comments', create_comment, name='create_comment'),
+    #이 코드는 댓글 삭제
+    path('api/comments/<int:comment_number>', delete_comment, name='delete_comment'),
+
     #이하의 url은 댓글도 불러오는 view를 연결한 url. 실패하여 view 삭제 시 위의 url을 유지
     # path('api/posts/<str:post_body_path>/<int:post_number>/content_and_image',
     #      views.GetPostDataWithCommentsView.as_view(),

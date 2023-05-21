@@ -23,6 +23,7 @@ from .serializers import UserSerializer, PostSerializer
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 import logging
+from .serializers import CommentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -280,8 +281,11 @@ class GetCommentsView(View):
 
 
         # 정렬: 먼저 before_comment 값으로 정렬하고, 그 다음 comment_id 값으로 정렬
-        comments_data = sorted(comments_data, key=lambda x: (x['before_comment'], x['comment_id']))
-
+       # comments_data = sorted(comments_data, key=lambda x: (x['before_comment'], x['comment_id']))
+        comments_data = sorted(
+            comments_data,
+            key=lambda x: (x['comment_id'] if x['before_comment'] == 0 else x['before_comment'], x['comment_id'])
+        )
 
         logger.info("위치 확인: 댓글 트리 생성 완료")
 
@@ -351,6 +355,89 @@ def login(request):
             }
             logger.info(f"Login failure for id: {id}")
         return JsonResponse(response)
+
+#댓글 생성 및 삭제에 관련된 view를 작성중
+
+from datetime import datetime
+
+
+@api_view(['POST'])
+def create_comment(request):
+    logger.info("댓글 작성 view 작동은 함...")
+    comment_body = request.data.get('comment_body')
+    post_number = request.data.get('post_number')
+    user_number = request.data.get('user_number')
+    before_comment = request.data.get('before_comment', None)
+
+
+    user = get_object_or_404(User, user_number=user_number)
+    #user=User.objects.get(pk=user_number)
+
+    post = get_object_or_404(Post, post_number=post_number)
+
+    if before_comment == 0:# 자신이 부모 댓글
+        before_comment = 0
+
+
+    comments_directory = f"{ROOT_PATH}/{COMMENT_PATH}"
+
+    os.makedirs(comments_directory, exist_ok=True)
+
+    # 현재 시간을 가져옵니다.
+    now = datetime.now()
+
+    now_str = now.strftime("%Y%m%d%H%M%S")
+
+    # 파일명을 생성합니다. before_comment가 없는 경우에는 before_comment 부분을 생략합니다.
+    filename = f"{post_number} {before_comment} {now_str}"
+    # if before_comment is not None:
+    #     filename = f"{post_number} {before_comment} {now_str}"
+
+    with open(f"{comments_directory}/{filename}.txt", 'w', encoding='utf-8') as f:
+        f.write(comment_body)
+
+    comment = Comment.objects.create(
+        post_number=post,
+        before_comment=before_comment,
+        user=user,
+        comment_body_path=filename
+    )
+
+    serializer = CommentSerializer(comment)
+
+    return Response(serializer.data, status=201)
+#여기까지
+
+#댓글 삭제 view 작성중
+@api_view(['DELETE'])
+def delete_comment(request, comment_number):
+    # 주어진 comment_number에 해당하는 댓글을 가져옴
+    comment = get_object_or_404(Comment, comment_number=comment_number)
+
+    if request.user == comment.user:
+        # 해당 댓글의 대댓글들을 찾음
+        replies = Comment.objects.filter(before_comment=comment_number)
+
+        # 대댓글들의 내용을 저장하는 파일들을 삭제함
+        for reply in replies:
+            if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt"):
+                os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt")
+
+        # 대댓글들을 삭제함
+        replies.delete()
+
+        # 댓글 내용을 저장하는 파일을 삭제함
+        if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt"):
+            os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt")
+
+        # 댓글을 삭제함
+        comment.delete()
+
+        return Response(status=204)
+    else:
+        return Response(status=401)
+#여기까지
+
 
 #회원 가입을 위한 view입니다.
 @api_view(['POST'])
