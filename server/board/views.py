@@ -302,7 +302,9 @@ class GetCommentsView(View):
                 'content': self.get_comment_content(comment),
                 'author_name': comment_author.name,
                 'before_comment': comment.before_comment,
+                'user_number': comment.user_number.user_number,#여기부터 시작. user_number 들고 올 수 있어야함
             }
+            logger.info("위치 확인:댓글 주인장 번호"+str(comment.user_number.user_number))
             comments_data.append(comment_data)
 
         return comments_data
@@ -412,30 +414,29 @@ def create_comment(request):
 @api_view(['DELETE'])
 def delete_comment(request, comment_number):
     # 주어진 comment_number에 해당하는 댓글을 가져옴
+    logger.info("댓글 삭제 view 작동은 함...")
     comment = get_object_or_404(Comment, comment_number=comment_number)
 
-    if request.user == comment.user_number:
-        # 해당 댓글의 대댓글들을 찾음
-        replies = Comment.objects.filter(before_comment=comment_number)
+    # 해당 댓글의 대댓글들을 찾음
+    replies = Comment.objects.filter(before_comment=comment_number)
 
-        # 대댓글들의 내용을 저장하는 파일들을 삭제함
-        for reply in replies:
-            if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt"):
-                os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt")
+    # 대댓글들의 내용을 저장하는 파일들을 삭제함
+    for reply in replies:
+        if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt"):
+            os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{reply.comment_body_path}.txt")
 
-        # 대댓글들을 삭제함
-        replies.delete()
+    # 대댓글들을 삭제함
+    replies.delete()
 
-        # 댓글 내용을 저장하는 파일을 삭제함
-        if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt"):
-            os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt")
+    # 댓글 내용을 저장하는 파일을 삭제함
+    if os.path.isfile(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt"):
+        os.remove(f"{ROOT_PATH}/{COMMENT_PATH}/{comment.comment_body_path}.txt")
 
-        # 댓글을 삭제함
-        comment.delete()
+    # 댓글을 삭제함
+    comment.delete()
 
-        return Response(status=204)
-    else:
-        return Response(status=401)
+    return Response(status=204)
+
 #여기까지
 
 
