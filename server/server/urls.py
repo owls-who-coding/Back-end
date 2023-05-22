@@ -52,19 +52,11 @@ urlpatterns = [
     #이 코드는 댓글 삭제
     path('api/comments/<int:comment_number>', delete_comment, name='delete_comment'),
 
-    #이하의 url은 댓글도 불러오는 view를 연결한 url. 실패하여 view 삭제 시 위의 url을 유지
-    # path('api/posts/<str:post_body_path>/<int:post_number>/content_and_image',
-    #      views.GetPostDataWithCommentsView.as_view(),
-    #      name='get_post_and_image_content_with_comments'),
 
     path('ai_api/', include('ai_api.urls'))
-    #re_path(r'^.*$', log_request, name='log_request'),  # 이 줄을 urlpatterns 리스트의 마지막에 추가하세요.
 
 
-    #Django REST Framework ( DRF ) 와 안드로이드 연동하기
-    # url(r'^', include(router.urls)),
-    # url(r'^api-v1/', include('rest_framework.urls', namespace='rest_framework_category')),
-    #Django REST Framework ( DRF ) 와 안드로이드 연동하기
+
 ]
 
 # restApi 용도

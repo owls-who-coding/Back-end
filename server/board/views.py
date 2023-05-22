@@ -141,6 +141,8 @@ def update_post(request):
         post = Post.objects.get(pk=post_number)
         user = post.user_number
 
+        # created_at = post.created_at
+        # formatted_time = created_at.strftime('%y%m%d%H%M%S')
         file_name = f"{post.post_body_path}"
 
         image = request.FILES.get('image', None)
@@ -469,5 +471,4 @@ def test(request):
     print(JsonResponse(response_data))
     print(response_data)
     return JsonResponse(response_data)
-
 
