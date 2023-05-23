@@ -52,10 +52,10 @@ def predict(img_batch) :
         pred = model.predict(img_batch, verbose = 1)
         pred = pred[0]
         if pred[1] > 0.7 :
-            predict_res[dis_name] = f'{round(pred[1] * 100, 2)}%'
+            predict_res[dis_name] = f'{round(pred[1] * 100, 2)}'
 
     if(len(predict_res) == 0) :
-        predict_res["증상 없음"] = "100%"
+        predict_res["증상 없음"] = "100"
     print(predict_res)
     return predict_res
 
