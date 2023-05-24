@@ -51,7 +51,7 @@ def predict(img_batch) :
     for dis_name, model in models.items() :
         pred = model.predict(img_batch, verbose = 1)
         pred = pred[0]
-        if pred[1] > 0.7 :
+        if pred[1] > 0.5 :
             predict_res[dis_name] = f'{round(pred[1] * 100, 2)}'
 
     if(len(predict_res) == 0) :
