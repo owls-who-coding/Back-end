@@ -88,7 +88,7 @@ DATABASES = {
         'NAME': 'OWC',
         'USER': 'root',
         'PASSWORD':'201808',
-        'HOST':'localhost',
+        'HOST':'host.docker.internal',
         'PORT':'3306'
     }
 }
