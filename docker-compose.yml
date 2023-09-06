@@ -1,6 +1,7 @@
 version: '3'
 services:
   server:
+    image: joonhee305/back-end-server
     build: .
     volumes:
     - ./class_model:/usr/scr/app/server/ai_api/class_model
