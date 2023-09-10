@@ -1,0 +1,15 @@
+version: '3'
+services:
+  server:
+    image: joonhee305/animal_health:1.0.0
+    build: .
+    container_name: server
+    volumes:
+    - ./class_model:/usr/scr/app/server/ai_api/class_model
+    - ./conf:/usr/scr/app/server/conf
+    ports:
+      - "8000:8000"
+    
+    command: python ./manage.py runserver 0.0.0.0:8000
+
+

@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv("./conf/.env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -85,11 +88,11 @@ WSGI_APPLICATION = 'server.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'OWC',
-        'USER': 'root',
-        'PASSWORD':'201808',
-        'HOST':'localhost',
-        'PORT':'3306'
+        'NAME': os.environ.get("MYSQL_NAME"),
+        'USER': os.environ.get("MYSQL_USER"),
+        'PASSWORD':os.environ.get("MYSQL_PASSWORD"),
+        'HOST':os.environ.get("MYSQL_HOST"),
+        'PORT':os.environ.get("MYSQL_PORT")
     }
 }
 
