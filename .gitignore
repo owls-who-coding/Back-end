@@ -179,7 +179,6 @@ owc
 
 #models
 class_model
-test_img
 
 #dataFile
 PostData
