@@ -6,14 +6,20 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 
-from keras.models import load_model
-from keras.preprocessing import image
-from io import BytesIO
-
 import os
 import base64
 import numpy as np, base64
 import PIL.Image 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+from keras.models import load_model
+from keras.preprocessing import image
+from io import BytesIO
+
+
+
+
 
 MODEL_PATH = './ai_api/class_model/'
 WEIGHT = os.listdir(MODEL_PATH)
@@ -49,9 +55,11 @@ def predict(img_batch) :
     predict_res={}
     
     for dis_name, model in models.items() :
-        pred = model.predict(img_batch, verbose = 1)
-        pred = pred[0]
-        if pred[1] > 0.5 :
+        # pred = model.predict(img_batch, verbose = 1)
+        pred=model(img_batch)
+        print(f"predict result : {pred}")
+        pred = pred.numpy()[0]
+        if pred[1] > 0.4 :
             predict_res[dis_name] = f'{round(pred[1] * 100, 2)}'
 
     if(len(predict_res) == 0) :
