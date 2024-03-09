@@ -16,4 +16,4 @@
 #### 3. 다이어리 기능
 + #### 매일 상태를 기록할 수 있는 다이어리 기능
 + #### 매일 변화를 시각화 할 수 있는 그래프 기능
-#### ![image](https://github.com/owls-who-coding/Back-end/assets/74956803/261fddf7-e1e8-4f7e-9824-9797deae5c06)
+###### ![image](https://github.com/owls-who-coding/Back-end/assets/74956803/261fddf7-e1e8-4f7e-9824-9797deae5c06)
