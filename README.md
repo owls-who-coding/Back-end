@@ -1,6 +1,6 @@
 # 반려견을 위한 커뮤니티 애플리케이션 애니멀헬스
 ### 2023 성결대학교 컴퓨터공학과 졸업작품 - 애니멀헬스
-#
+
 ### 사용스택
 #### Develop tool - VScode, Android Studio
 #### Back-End - Django, Tensorflow, Keras
@@ -8,9 +8,6 @@
 #### Data Analytics - Python, Tensorflow, pytorch
 
 #
-#
-
-
 #### 1. 안구질환 분석 기능
 + #### 반려견의 안구를 객체인식을 통해 실시간으로 인식
 + #### Resnet 기반의 이미지 분류 모델을 통해 사진을 통해 반려견 안구질환 분석
