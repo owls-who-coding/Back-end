@@ -5,7 +5,7 @@
 #### Develop tool - VScode, Android Studio
 #### Back-End - Django, Tensorflow, Keras
 #### Front-End - Java, Xml, TorchLite
-#### Data Analytics - Python, Tensorflow, pytorch
+#### Data Analytics - Python, Tensorflow, pytorch > https://github.com/owls-who-coding/Scripts
 
 #
 #### 1. 안구질환 분석 기능
