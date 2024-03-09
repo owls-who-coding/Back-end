@@ -214,7 +214,8 @@ def delete_post(request):
         user = post.user_number
         created_at = post.created_at
         formatted_time = created_at.strftime('%y%m%d%H%M%S')
-        file_name = f"{user} {formatted_time}"
+        # file_name = f"{user} {formatted_time}"
+        file_name = f"{post.post_body_path}"
         text_file_path = f'{ROOT_PATH}/{DATA_PATH}/txtfile/{file_name}.txt'
         image_file_name = f'{file_name}.jpg'
         image_file_path = f'{ROOT_PATH}/{DATA_PATH}/imagefile/{image_file_name}'
