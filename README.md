@@ -3,7 +3,7 @@
 
 ### 사용스택
 > #### Develop tool - VScode, Android Studio 
-> #### Back-End - Django, Tensorflow, Keras (Link : [https://github.com/owls-who-coding/Scripts](https://github.com/owls-who-coding/Back-end))
+> [https://github.com/owls-who-coding/Scripts] #### Back-End - Django, Tensorflow, Keras
 > #### Front-End - Java, Xml, TorchLite (Link : https://github.com/owls-who-coding/Scripts)
 > #### Data Analytics - Python, Tensorflow, pytorch (Link : https://github.com/owls-who-coding/Scripts)
 
