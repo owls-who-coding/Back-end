@@ -2,10 +2,10 @@
 ### 2023 성결대학교 컴퓨터공학과 졸업작품 - 애니멀헬스
 
 ### 사용스택
-> #### Develop tool - VScode, Android Studio 
-> #### Back-End - Django, Tensorflow, Keras (Link : https://github.com/owls-who-coding/Back-end)
-> #### Front-End - Java, Xml, TorchLite (Link : https://github.com/owls-who-coding/Front-End)
-> #### Data Analytics - Python, Tensorflow, pytorch (Link : https://github.com/owls-who-coding/Scripts)
++ #### Develop tool - VScode, Android Studio 
++ #### Back-End - Django, Tensorflow, Keras (Link : https://github.com/owls-who-coding/Back-end)
++ #### Front-End - Java, Xml, TorchLite (Link : https://github.com/owls-who-coding/Front-End)
++ #### Data Analytics - Python, Tensorflow, pytorch (Link : https://github.com/owls-who-coding/Scripts)
 
 #
 #### 1. 안구질환 분석 기능
